@@ -1,0 +1,69 @@
+# eye-metrics-core default configuration
+# All preprocessing and feature extraction parameters in one place.
+
+sample_rate: 60.0  # Hz — base rate for all derived sample counts
+
+preprocessing:
+  eye_selection:
+    validity_difference_threshold: 0.05  # use mean of both eyes if within 5%
+
+  gaps_and_blinks:
+    confidence_threshold: 0.5
+    openness_threshold: 0.5            # relative to running mean
+    blink_duration_min_ms: 100
+    blink_duration_max_ms: 300
+    blink_margin_ms: 100               # samples to remove around blinks
+
+  outlier_rejection:
+    ema_alpha: 0.3                     # EMA smoothing for median tracking
+    n_mad_multiplier: 10.0             # threshold = median_speed + n * MAD
+
+  interpolation:
+    max_gap_ms: 300                    # gaps longer than this are left as NaN
+    min_samples: 20                    # skip interpolation if fewer valid samples
+    resample_period_ms: 16.67          # target 60 Hz
+    method: "slinear"
+
+  validation:
+    min_non_blink_gap_ratio: 0.5       # reject window if >50% is gaps/blinks
+
+features:
+  gaze:
+    idt_duration_threshold_ms: 100     # I-DT minimum fixation duration
+    idt_dispersion_threshold: 0.05     # I-DT dispersion threshold
+    ivt_threshold_deg_per_sec: 45.0    # I-VT velocity threshold
+    ivt_min_fixation_duration_ms: 55   # I-VT minimum fixation duration
+    ivt_min_datapoints: 2              # I-VT minimum consecutive samples
+    velocity_limit_min: -1000.0        # angular velocity clip floor (deg/s)
+    velocity_limit_max: 1000.0         # angular velocity clip ceiling (deg/s)
+    velocity_filter_cutoff_hz: 10.0    # FIR low-pass cutoff for velocity smoothing
+    velocity_filter_taps: 5            # FIR filter length
+
+  pupil:
+    ripa2:
+      m_vlf: 98                        # half-window for VLF derivative (tuned for 300 Hz)
+      n_vlf: 2                         # Savitzky-Golay polynomial order (VLF)
+      m_lf: 13                         # half-window for LF derivative
+      n_lf: 4                          # Savitzky-Golay polynomial order (LF)
+      clip_min: 0.0
+      clip_max: 1.5
+      smoothing_sec: 1.0               # moving average kernel duration
+
+    lhipa:
+      wavelet: "sym16"
+
+    wavelets:
+      wavelet: "db8"
+      level: 4                         # decomposition depth
+      mode: "periodization"
+      smoothing_sec: 1.0
+
+  feature_set: "ipa_wavelets"          # which feature group to extract
+
+  window:
+    size_samples: 300                  # 5s @ 60 Hz
+    interval_samples: 60               # inference every 1s @ 60 Hz
+
+normalization:
+  min_std: 1.0e-10                     # floor to avoid division by zero
+  min_observations: 3                  # start normalizing after N samples

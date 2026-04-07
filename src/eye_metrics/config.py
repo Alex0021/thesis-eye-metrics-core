@@ -58,6 +58,7 @@ class PreprocessingConfig:
     outlier_rejection: OutlierConfig = field(default_factory=OutlierConfig)
     interpolation: InterpolationConfig = field(default_factory=InterpolationConfig)
     validation: ValidationConfig = field(default_factory=ValidationConfig)
+    skip_edge_samples: int = 60
 
 
 @dataclass
@@ -108,6 +109,7 @@ class PupilFeatureConfig:
 class WindowConfig:
     size_samples: int = 300
     interval_samples: int = 60
+    min_samples: int = 100
 
 
 @dataclass
@@ -116,6 +118,7 @@ class FeaturesConfig:
     pupil: PupilFeatureConfig = field(default_factory=PupilFeatureConfig)
     feature_set: str = "ipa_wavelets"
     window: WindowConfig = field(default_factory=WindowConfig)
+    rolling_buffer_size: int = 1000
 
 
 @dataclass

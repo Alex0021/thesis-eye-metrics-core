@@ -5,10 +5,12 @@ def interpolate_pupil_data(
     eye_df: pd.DataFrame,
     gaps_df: pd.DataFrame,
     max_gap_ms: int,
+    resample_period_ms: float,
     column: str = "pupil_diameter",
 ) -> pd.DataFrame:
     return interpolate_eye_data(
-        eye_df, gaps_df, columns=[column], max_gap_ms=max_gap_ms
+        eye_df, gaps_df, columns=[column], max_gap_ms=max_gap_ms,
+        resample_period_ms=resample_period_ms,
     )
 
 

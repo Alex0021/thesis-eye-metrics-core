@@ -125,6 +125,7 @@ def preprocess(
         df,
         gaps_df,
         max_gap_ms=cfg.interpolation.max_gap_ms,
+        resample_period_ms=cfg.interpolation.resample_period_ms,
     )
 
     return PreprocessedResult(pupil_df, gaps_df, eye_method)

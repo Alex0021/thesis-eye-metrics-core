@@ -17,6 +17,7 @@ preprocessing:
   outlier_rejection:
     ema_alpha: 0.3                     # EMA smoothing for median tracking
     n_mad_multiplier: 10.0             # threshold = median_speed + n * MAD
+    n_passes: 5                        # number of outlier rejection iterations
 
   interpolation:
     max_gap_ms: 300                    # gaps longer than this are left as NaN

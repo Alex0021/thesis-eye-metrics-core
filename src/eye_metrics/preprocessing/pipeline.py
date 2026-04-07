@@ -17,7 +17,7 @@ from ..config import PreprocessingConfig
 from .eye_selection import select_best_eye
 from .gaps import detect_gaps_and_blinks
 from .interpolation import interpolate_pupil_data
-from .outliers import OnlinePupilStats
+from .outliers import OnlinePupilStats, detect_outliers
 
 
 @dataclass
@@ -85,25 +85,28 @@ def preprocess(
 
     # 5. Outlier rejection on pupil dilation speed
     if "pupil_diameter" in df.columns:
-        ts = df["timestamp_sec"].values
-        pd_vals = df["pupil_diameter"].values
-        dt = np.diff(ts)
-        dt[dt == 0] = 1e-6
-        speed_fwd = np.abs(np.diff(pd_vals) / dt)
-        speeds = np.empty(len(pd_vals))
-        speeds[0] = speed_fwd[0] if len(speed_fwd) > 0 else 0.0
-        speeds[-1] = speed_fwd[-1] if len(speed_fwd) > 0 else 0.0
-        speeds[1:-1] = np.maximum(speed_fwd[:-1], speed_fwd[1:])
-
         if outlier_tracker is None:
-            outlier_tracker = OnlinePupilStats(
-                ema_alpha=cfg.outlier_rejection.ema_alpha
-            )
-        outlier_tracker.update_from_speeds(speeds)
-        outlier_mask = outlier_tracker.outlier_mask(
-            speeds, n_multiplier=cfg.outlier_rejection.n_mad_multiplier
-        )
-        df = df[~outlier_mask]
+            # Offline path: multi-pass MAD over the full window
+            outlier_idx = detect_outliers(
+                df,
+                column="pupil_diameter",
+                n_multiplier=cfg.outlier_rejection.n_mad_multiplier,
+                n_passes=cfg.outlier_rejection.n_passes,
+            ).index
+            df = df.drop(index=outlier_idx)
+        else:
+            # Online path: single-pass against EMA-tracked running stats
+            ts = df["timestamp_sec"].values
+            pd_vals = df["pupil_diameter"].values
+            dt = np.diff(ts)
+            dt[dt == 0] = 1e-6
+            speed_fwd = np.abs(np.diff(pd_vals) / dt)
+            speeds = np.empty(len(pd_vals))
+            speeds[0] = speed_fwd[0] if len(speed_fwd) > 0 else 0.0
+            speeds[-1] = speed_fwd[-1] if len(speed_fwd) > 0 else 0.0
+            speeds[1:-1] = np.maximum(speed_fwd[:-1], speed_fwd[1:])
+            outlier_tracker.update_from_speeds(speeds)
+            df = df[~outlier_tracker.outlier_mask(speeds)]
 
     # 6. Remove blinks with a margin on either side to avoid edge artefacts
     margins = cfg.gaps_and_blinks.blink_margin_ms / 1000.0

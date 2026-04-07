@@ -35,6 +35,7 @@ class GapsConfig:
 class OutlierConfig:
     ema_alpha: float = 0.3
     n_mad_multiplier: float = 10.0
+    n_passes: int = 1
 
 
 @dataclass

@@ -14,7 +14,7 @@ from .features.pupil import LHIPA, RIPA2, WaveletFeature
 from .preprocessing.eye_selection import select_best_eye
 from .preprocessing.gaps import detect_gaps_and_blinks
 from .preprocessing.interpolation import interpolate_eye_data, interpolate_gaze, interpolate_pupil_data
-from .preprocessing.outliers import OnlinePupilStats
+from .preprocessing.outliers import OnlinePupilStats, detect_outliers
 from .preprocessing.pipeline import PreprocessedResult, preprocess
 from .types import FixationRow, GapInfo, SaccadeRow
 
@@ -25,6 +25,7 @@ __all__ = [
     "GapInfo",
     "LHIPA",
     "OnlinePupilStats",
+    "detect_outliers",
     "PreprocessedResult",
     "RIPA2",
     "SaccadeRow",
